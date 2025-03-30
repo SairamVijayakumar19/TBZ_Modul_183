@@ -1,4 +1,5 @@
 const db = require('./fw/db');
+const bcrypt = require('bcrypt');
 
 async function handleLogin(req, res) {
     let msg = '';
@@ -28,44 +29,31 @@ function startUserSession(res, user) {
     res.redirect('/');
 }
 
-async function validateLogin (username, password) {
+async function validateLogin(username, password) {
     let result = { valid: false, msg: '', userId: 0 };
 
-    // Connect to the database
     const dbConnection = await db.connectDB();
+    const [rows] = await dbConnection.execute(
+        "SELECT id, username, password FROM users WHERE username = ?",
+        [username]
+    );
 
-    try {
-        const [results] = await dbConnection.execute(
-            "SELECT id, username, password FROM users WHERE username = ?",
-            [username]
-          );
+    if (rows.length > 0) {
+        const db_id = rows[0].id;
+        const db_password = rows[0].password;
 
-        if(results.length > 0) {
-            // Bind the result variables
-            let db_id = results[0].id;
-            let db_username = results[0].username;
-            let db_password = results[0].password;
-
-            // Verify the password
-            if (password == db_password) {
-                result.userId = db_id;
-                result.valid = true;
-                result.msg = 'login correct';
-            } else {
-                // Password is incorrect
-                result.msg = 'Incorrect password';
-            }
+        const match = await bcrypt.compare(password, db_password);
+        if (match) {
+            result.userId = db_id;
+            result.valid = true;
+            result.msg = 'Login correct';
         } else {
-            // Username does not exist
-            result.msg = 'Username does not exist';
+            result.msg = 'Incorrect password';
         }
-
-        console.log(results); // results contains rows returned by server
-        //console.log(fields); // fields contains extra meta data about results, if available
-    } catch (err) {
-        console.log(err);
+    } else {
+        result.msg = 'Username does not exist';
     }
-    
+
     return result;
 }
 
@@ -80,7 +68,7 @@ function getHtml() {
         </div>
         <div class="form-group">
             <label for="password">Password</label>
-            <input type="text" class="form-control size-medium" name="password" id="password">
+            <input type="password" class="form-control size-medium" name="password" id="password">
         </div>
         <div class="form-group">
             <label for="submit" ></label>

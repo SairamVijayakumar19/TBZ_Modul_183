@@ -16,7 +16,8 @@ async function getHtml() {
         </tr>`;
 
     result.map(function (record) {
-        html += `<tr><td>`+record.ID+`</td><td>`+record.username+`</td><td>`+record.title+`</td><input type='hidden' name='password' value='`+record.password+`' /></tr>`;
+        html += `<tr><td>`+record.ID+`</td><td>`+record.username+`</td><td>`+record.title+`</td><!-- Passwort wird aus Sicherheitsgründen nicht angezeigt -->
+</tr>`;
     });
 
     html += `
