@@ -1,4 +1,4 @@
-const db = require('../fw/db')
+const db = require('../fw/db'); // Pfad ggf. anpassen
 
 function escapeHTML(str) {
     if (!str) return '';
@@ -25,11 +25,13 @@ async function getHtml(req) {
         </thead>
         <tbody>`;
 
-    if (req.cookies.userid !== undefined) {
+    const userid = req.session.userid;
+
+    if (userid) {
         const conn = await db.connectDB();
         const [result] = await conn.execute(
             'SELECT ID, title, state FROM tasks WHERE UserID = ?',
-            [req.cookies.userid]
+            [userid]
         );
 
         result.forEach(row => {
@@ -43,6 +45,8 @@ async function getHtml(req) {
                 </td>
             </tr>`;
         });
+    } else {
+        html += `<tr><td colspan="4">⚠️ Keine Session aktiv. Bitte einloggen.</td></tr>`;
     }
 
     html += `
