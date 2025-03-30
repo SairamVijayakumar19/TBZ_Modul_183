@@ -31,7 +31,7 @@ function getHtml(req) {
             submitHandler: function (form) {
                 provider = $("#searchurl").val();
                 terms = $("#terms").val();
-                userid = `+req.cookies.userid+`;
+                userid = `+req.session.userid+`;
                 $("#msg").show();
                 $("#result").html("");
                 $.post("search", { provider: provider, terms: terms, userid: userid }, function(data){
