@@ -1,76 +1,53 @@
 const db = require('./fw/db');
 
+function escapeHTML(str) {
+    if (!str) return '';
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 async function getHtml(req) {
-    let title = '';
-    let state = '';
-    let taskId = '';
     let html = '';
-    let options = ["Open", "In Progress", "Done"];
+    const taskId = req.query.id;
 
-    if(req.query.id !== undefined) {
-        console.log('req.query: ')
-        console.log(req.query);
-        console.log(req.query.id);
-        taskId = req.query.id;
-        let conn = await db.connectDB();
-        let [result] = await conn.execute(
-            "SELECT ID, title, state FROM tasks WHERE ID = ?",
-            [taskId]
-          );
-        if(result.length > 0) {
-            title = result[0].title;
-            state = result[0].state;
+    if (taskId) {
+        const conn = await db.connectDB();
+        const [result] = await conn.execute('SELECT ID, title, state FROM tasks WHERE ID = ?', [taskId]);
+
+        if (result.length > 0) {
+            const row = result[0];
+
+            html += `
+            <h2>Edit Task</h2>
+            <form action="/savetask" method="get">
+                <input type="hidden" name="id" value="${row.ID}">
+                <label for="title">Title:</label>
+                <input type="text" name="title" value="${escapeHTML(row.title)}"><br>
+                <label for="state">State:</label>
+                <input type="text" name="state" value="${escapeHTML(row.state)}"><br>
+                <input type="submit" value="Save">
+            </form>`;
+        } else {
+            html += `<p>Task not found.</p>`;
         }
-
-        html += `<h1>Edit Task</h1>`;
     } else {
-        html += `<h1>Create Task</h1>`;
+        // New Task (ohne Daten)
+        html += `
+        <h2>New Task</h2>
+        <form action="/savetask" method="get">
+            <label for="title">Title:</label>
+            <input type="text" name="title"><br>
+            <label for="state">State:</label>
+            <input type="text" name="state"><br>
+            <input type="submit" value="Save">
+        </form>`;
     }
-
-    html += `
-    <form id="form" method="post" action="savetask">
-        <input type="hidden" name="id" value="`+taskId+`" />
-        <div class="form-group">
-            <label for="title">Description</label>
-            <input type="text" class="form-control size-medium" name="title" id="title" value="`+title+`">
-        </div>
-        <div class="form-group">
-            <label for="state">State</label>
-            <select name="state" id="state" class="size-auto">`;
-
-    for(let i = 0; i < options.length; i++) {
-        let selected = state === options[i].toLowerCase() ? 'selected' : '';
-        html += `<span>`+options[1]+`</span>`;
-        html += `<option value='`+options[i].toLowerCase()+`' `+selected+`>`+options[i]+`</option>`;
-    }
-
-    html += `
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="submit" ></label>
-            <input id="submit" type="submit" class="btn size-auto" value="Submit" />
-        </div>
-    </form>
-    <script>
-        $(document).ready(function () {
-        $('#form').validate({
-            rules: {
-                title: {
-                    required: true
-                }
-            },
-            messages: {
-                title: 'Please enter a description.',
-            },
-            submitHandler: function (form) {
-                form.submit();
-            }
-        });
-    });
-    </script>`;
 
     return html;
 }
 
-module.exports = { html: getHtml }
+module.exports = { html: getHtml };
