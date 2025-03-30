@@ -18,7 +18,7 @@ async function getHtml(req) {
 
     let id = 0;
     let roleid = 0;
-    if(req.cookies.userid !== undefined && req.cookies.userid !== '') {
+    if (req.session && req.session.userid) {
         let id = req.cookies.userid;
         let stmt = await db.executeStatement(
             "SELECT users.id userid, roles.id roleid, roles.title rolename FROM users INNER JOIN permissions ON users.id = permissions.userid INNER JOIN roles ON permissions.roleID = roles.id WHERE userid = ?",

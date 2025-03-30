@@ -22,7 +22,7 @@ async function handleLogin(req, res) {
     return { 'html': msg + getHtml(), 'user': user };
 }
 
-function startUserSession(res, user) {
+function startUserSession(req, res, user) {
     console.log('login valid... start user session now for userid '+user.userid);
     req.session.userid = user.userid;
     req.session.username = user.username;

@@ -12,8 +12,9 @@ function escapeHTML(str) {
 
 async function getHtml(req) {
     let html = '';
-    const { id, title, state } = req.query;
-    const userid = req.cookies.userid;
+    const { id, title, state } = req.body;
+    const userid = req.session.userid;
+
 
     if (title && state && userid) {
         const conn = await db.connectDB();

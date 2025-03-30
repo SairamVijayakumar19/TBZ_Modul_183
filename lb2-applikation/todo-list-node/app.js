@@ -78,7 +78,7 @@ app.get('/login', async (req, res) => {
 
     if(content.user.userid !== 0) {
         // login was successful... set cookies and redirect to /
-        login.startUserSession(res, content.user);
+        login.startUserSession(req, res, content.user);
     } else {
         // login unsuccessful or not made jet... display login form
         let html = await wrapContent(content.html, req);
