@@ -1,47 +1,55 @@
-const db = require('../fw/db');
+const db = require('../fw/db')
+
+function escapeHTML(str) {
+    if (!str) return '';
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
 
 async function getHtml(req) {
     let html = `
-    <section id="list">
-        <a href="edit">Create Task</a>
-        <table>
+    <h2>My Tasks</h2>
+    <a href="/edit">New Task</a>
+    <table>
+        <thead>
             <tr>
                 <th>ID</th>
-                <th>Description</th>
+                <th>Title</th>
                 <th>State</th>
-                <th></th>
+                <th>Actions</th>
             </tr>
-    `;
+        </thead>
+        <tbody>`;
 
-    let conn = await db.connectDB();
-    let [result] = await conn.execute(
-        "SELECT ID, title, state FROM tasks WHERE UserID = ?",
-        [req.cookies.userid]
-      );
-    console.log(result);
-    result.forEach(function(row) {
-        html += `
+    if (req.cookies.userid !== undefined) {
+        const conn = await db.connectDB();
+        const [result] = await conn.execute(
+            'SELECT ID, title, state FROM tasks WHERE UserID = ?',
+            [req.cookies.userid]
+        );
+
+        result.forEach(row => {
+            html += `
             <tr>
-                <td>`+row.ID+`</td>
-                <td class="wide">`+row.title+`</td>
-                <td>`+ucfirst(row.state)+`</td>
+                <td>${row.ID}</td>
+                <td>${escapeHTML(row.title)}</td>
+                <td>${escapeHTML(row.state)}</td>
                 <td>
-                    <a href="edit?id=`+row.ID+`">edit</a> | <a href="delete?id=`+row.ID+`">delete</a>
+                    <a href="/edit?id=${row.ID}">Edit</a>
                 </td>
             </tr>`;
-    });
+        });
+    }
 
     html += `
-        </table>
-    </section>`;
+        </tbody>
+    </table>`;
 
     return html;
 }
 
-function ucfirst(string) {
-    return string.charAt(0).toUpperCase() + string.slice(1);
-}
-
-module.exports = {
-    html: getHtml
-}
+module.exports = { html: getHtml };

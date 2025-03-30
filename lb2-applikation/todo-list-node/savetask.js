@@ -1,41 +1,48 @@
 const db = require('./fw/db');
 
+function escapeHTML(str) {
+    if (!str) return '';
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 async function getHtml(req) {
     let html = '';
-    let taskId = '';
+    const { id, title, state } = req.query;
+    const userid = req.cookies.userid;
 
-    // see if the id exists in the database
-    if (req.body.id !== undefined && req.body.id.length !== 0) {
-        taskId = req.body.id;
-        let stmt = await db.executeStatement('select ID, title, state from tasks where ID = ' + taskId);
-        if (stmt.length === 0) {
-            taskId = '';
+    if (title && state && userid) {
+        const conn = await db.connectDB();
+
+        try {
+            if (!id) {
+                // Neuen Task einfügen
+                await conn.execute(
+                    'INSERT INTO tasks (title, state, userID) VALUES (?, ?, ?)',
+                    [title, state, userid]
+                );
+                html += `<p>✅ Task "${escapeHTML(title)}" wurde erfolgreich erstellt.</p>`;
+            } else {
+                // Bestehenden Task aktualisieren
+                await conn.execute(
+                    'UPDATE tasks SET title = ?, state = ? WHERE ID = ? AND userID = ?',
+                    [title, state, id, userid]
+                );
+                html += `<p>✅ Task "${escapeHTML(title)}" wurde erfolgreich aktualisiert.</p>`;
+            }
+        } catch (err) {
+            html += `<p>❌ Fehler beim Speichern: ${escapeHTML(err.message)}</p>`;
         }
-    }
-
-    if (req.body.title !== undefined && req.body.state !== undefined){
-        let state = req.body.state;
-        let title = req.body.title;
-        let userid = req.cookies.userid;
-
-        if (taskId === ''){
-            stmt = db.executeStatement(
-                "INSERT INTO tasks (title, state, userID) VALUES (?, ?, ?)",
-                [title, state, userid]
-              );
-        } else {
-            stmt = db.executeStatement(
-                "UPDATE tasks SET title = ?, state = ? WHERE ID = ?",
-                [title, state, taskId]
-              );
-        }
-
-        html += "<span class='info info-success'>Update successfull</span>";
     } else {
-        html += "<span class='info info-error'>No update was made</span>";
+        html += `<p>❌ Fehlende Eingaben.</p>`;
     }
 
+    html += `<a href="/">Zurück zur Übersicht</a>`;
     return html;
 }
 
-module.exports = { html: getHtml }
+module.exports = { html: getHtml };

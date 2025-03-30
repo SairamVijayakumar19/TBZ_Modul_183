@@ -24,8 +24,8 @@ async function handleLogin(req, res) {
 
 function startUserSession(res, user) {
     console.log('login valid... start user session now for userid '+user.userid);
-    res.cookie('username', user.username);
-    res.cookie('userid', user.userid);
+    req.session.userid = user.userid;
+    req.session.username = user.username;
     res.redirect('/');
 }
 

@@ -19,8 +19,13 @@ const PORT = 3000;
 app.use(session({
     secret: 'secret',
     resave: true,
-    saveUninitialized: true
-}));
+    saveUninitialized: true,
+    cookie: {
+        httpOnly: true,
+        secure: false, // 🔒 auf true setzen in HTTPS
+        maxAge: 1000 * 60 * 60 // 1 Stunde
+      }
+    }));
 
 // Middleware für Body-Parser
 app.use(express.urlencoded({ extended: true }));
@@ -135,5 +140,5 @@ function activeUserSession(req) {
     // check if cookie with user information ist set
     console.log('in activeUserSession');
     console.log(req.cookies);
-    return req.cookies !== undefined && req.cookies.username !== undefined && req.cookies.username !== '';
+    return req.session && req.session.userid;
 }

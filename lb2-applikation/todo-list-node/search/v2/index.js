@@ -1,27 +1,45 @@
 const db = require('../../fw/db');
 
-async function search(req) {
-    if (req.query.userid === undefined || req.query.terms === undefined){
-        return "Not enough information to search";
-    }
-
-    let userid = req.query.userid;
-    let terms = req.query.terms;
-    let result = '';
-
-    let stmt = await db.executeStatement(
-        "SELECT ID, title, state FROM tasks WHERE userID = ? AND title LIKE ?",
-        [userid, `%${terms}%`]
-      );
-    if (stmt.length > 0) {
-        stmt.forEach(function(row) {
-            result += row.title+' ('+row.state+')<br />';
-        });
-    }
-
-    return result;
+function escapeHTML(str) {
+    if (!str) return '';
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
 }
 
-module.exports = {
-    search: search
-};
+async function getHtml(req) {
+    let html = `
+    <h2>Task Search</h2>
+    <form method="get" action="/">
+        <input type="text" name="q" placeholder="Search title">
+        <input type="submit" value="Search">
+    </form>`;
+
+    const userid = req.cookies.userid;
+
+    if (req.query.q && userid) {
+        const searchTerm = req.query.q;
+        const conn = await db.connectDB();
+
+        const [result] = await conn.execute(
+            'SELECT ID, title, state FROM tasks WHERE userID = ? AND title LIKE ?',
+            [userid, `%${searchTerm}%`]
+        );
+
+        html += `<h3>Search results for: <em>${escapeHTML(searchTerm)}</em></h3>`;
+        html += `<ul>`;
+
+        result.forEach(task => {
+            html += `<li>[${escapeHTML(task.state)}] ${escapeHTML(task.title)}</li>`;
+        });
+
+        html += `</ul>`;
+    }
+
+    return html;
+}
+
+module.exports = { html: getHtml };
