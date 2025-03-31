@@ -135,4 +135,5 @@ insert into users (ID, username, password) values (2, 'dominic.heule', '12345');
 insert into users (ID, username, password) values (3, 'user1', 'Amazing.Pass23');
 
 insert into permissions(ID, userID, roleID) values(null, 1, 1);
+insert into permissions(ID, userID, roleID) values(null, 3, 2);
 insert into permissions(ID, userID, roleID) values(null, 2, 2);
