@@ -47,7 +47,7 @@ Im Rahmen der Projektarbeit wurden folgende sicherheitsrelevanten Schwachstellen
 
     Falls eure `users`-Tabelle noch Klartext-Passwörter enthält, führt einmalig folgendes Skript aus:
 
-    docker exec -it m183-lb2-db bash
+    docker exec -it m183-lb2-web bash
     node migratePasswords.js
 
 
