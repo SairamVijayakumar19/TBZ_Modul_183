@@ -38,8 +38,7 @@ Im Rahmen der Projektarbeit wurden folgende sicherheitsrelevanten Schwachstellen
 
 - Backend-validiert: `title`, `state`, `userid`
 - Alle SQL-Zugriffe abgesichert
-- Authentifizierte Routen geschützt
-- Session-, XSS-, CSRF-, Brute-Force- & Fixation-Schutz implementiert
+- Session-, XSS-, CSRF-Schutz implementiert
 
 
 ---
@@ -49,7 +48,7 @@ Im Rahmen der Projektarbeit wurden folgende sicherheitsrelevanten Schwachstellen
 Die Applikation erfüllt nun die Schutzziele:
 -  Vertraulichkeit (z. B. gehashte Passwörter)
 -  Integrität (nur eigene Daten veränderbar)
--  Verfügbarkeit (Brute-Force geblockt, CSRF geschützt)
+-  Verfügbarkeit (CSRF geschützt)
 
  **Phase 1 vollständig abgeschlossen – bereit für Phase 2**
 
