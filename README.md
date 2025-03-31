@@ -43,6 +43,14 @@ Im Rahmen der Projektarbeit wurden folgende sicherheitsrelevanten Schwachstellen
 
 ---
 
+## Passwort-Migration (nur einmal nötig)
+
+    Falls eure `users`-Tabelle noch Klartext-Passwörter enthält, führt einmalig folgendes Skript aus:
+
+    bash
+    node migratePasswords.js
+
+
 ##  Fazit
 
 Die Applikation erfüllt nun die Schutzziele:
