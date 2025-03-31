@@ -21,25 +21,23 @@ async function getHtml(req) {
 
         try {
             if (!id) {
-                // Neuen Task einfügen
                 await conn.execute(
                     'INSERT INTO tasks (title, state, userID) VALUES (?, ?, ?)',
                     [title, state, userid]
                 );
-                html += `<p>✅ Task "${escapeHTML(title)}" wurde erfolgreich erstellt.</p>`;
+                html += `<p>Task "${escapeHTML(title)}" wurde erfolgreich erstellt.</p>`;
             } else {
-                // Bestehenden Task aktualisieren
                 await conn.execute(
                     'UPDATE tasks SET title = ?, state = ? WHERE ID = ? AND userID = ?',
                     [title, state, id, userid]
                 );
-                html += `<p>✅ Task "${escapeHTML(title)}" wurde erfolgreich aktualisiert.</p>`;
+                html += `<p>Task "${escapeHTML(title)}" wurde erfolgreich aktualisiert.</p>`;
             }
         } catch (err) {
-            html += `<p>❌ Fehler beim Speichern: ${escapeHTML(err.message)}</p>`;
+            html += `<p>Fehler beim Speichern: ${escapeHTML(err.message)}</p>`;
         }
     } else {
-        html += `<p>❌ Fehlende Eingaben.</p>`;
+        html += `<p>Fehlende Eingaben.</p>`;
     }
 
     html += `<a href="/">Zurück zur Übersicht</a>`;

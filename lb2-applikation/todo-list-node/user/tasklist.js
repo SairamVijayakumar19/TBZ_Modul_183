@@ -46,7 +46,7 @@ async function getHtml(req) {
             </tr>`;
         });
     } else {
-        html += `<tr><td colspan="4">⚠️ Keine Session aktiv. Bitte einloggen.</td></tr>`;
+        html += `<tr><td colspan="4">Keine Session aktiv. Bitte einloggen.</td></tr>`;
     }
 
     html += `

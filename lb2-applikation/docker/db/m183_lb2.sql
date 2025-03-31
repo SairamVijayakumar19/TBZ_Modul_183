@@ -131,8 +131,8 @@ insert into roles (ID, title) values (1, 'Admin');
 
 
 insert into users (ID, username, password) values (1, 'admin1', 'Awesome.Pass34');
-insert into users (ID, username, password) values (1, 'dominic.heule', '12345');
-insert into users (ID, username, password) values (2, 'user1', 'Amazing.Pass23');
+insert into users (ID, username, password) values (2, 'dominic.heule', '12345');
+insert into users (ID, username, password) values (3, 'user1', 'Amazing.Pass23');
 
 insert into permissions(ID, userID, roleID) values(null, 1, 1);
 insert into permissions(ID, userID, roleID) values(null, 2, 2);

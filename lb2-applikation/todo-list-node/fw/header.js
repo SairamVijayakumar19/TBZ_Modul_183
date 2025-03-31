@@ -16,19 +16,20 @@ async function getHtml(req) {
     <header>
         <div>This is the insecure m183 test app</div>`;
 
-    let id = 0;
     let roleid = 0;
-    if (req.session && req.session.userid) {
-        let id = req.cookies.userid;
-        let stmt = await db.executeStatement(
-            "SELECT users.id userid, roles.id roleid, roles.title rolename FROM users INNER JOIN permissions ON users.id = permissions.userid INNER JOIN roles ON permissions.roleID = roles.id WHERE userid = ?",
-            [id]
-          );
-          
-        console.log(stmt);
 
-        // load role from db
-        if(stmt.length > 0) {
+    if (req.session && req.session.userid) {
+        const id = req.session.userid;
+
+        const stmt = await db.executeStatement(`
+            SELECT users.id userid, roles.id roleid, roles.title rolename
+            FROM users
+            INNER JOIN permissions ON users.id = permissions.userid
+            INNER JOIN roles ON permissions.roleID = roles.id
+            WHERE users.id = ?
+        `, [id]);
+
+        if (stmt.length > 0) {
             roleid = stmt[0].roleid;
         }
 
@@ -36,10 +37,13 @@ async function getHtml(req) {
         <nav>
             <ul>
                 <li><a href="/">Tasks</a></li>`;
-        if(roleid === 1) {
+
+        if (roleid === 1) {
             content += `
-                <li><a href="/admin/users">User List</a></li>`;
+                <li><a href="/admin/users">User List</a></li>
+                <li><a href="/admin/users/tasks">All Tasks</a></li>`;
         }
+
         content += `
                 <li><a href="/logout">Logout</a></li>
             </ul>

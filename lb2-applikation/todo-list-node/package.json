@@ -4,14 +4,17 @@
   "description": "Simple Node.js authentication and session handling example",
   "main": "app.js",
   "scripts": {
-    "start": "nodemon --legacy-watch app.js"
+    "start": "node app.js"
   },
   "dependencies": {
+    "bcrypt": "^5.1.1",
+    "nodemon": "^3.1.0",
     "axios": "^1.7.2",
     "cookie-parser": "^1.4.6",
     "express": "^4.17.1",
-    "express-session": "^1.18.1",
-    "mysql2": "^2.3.0"
+    "express-session": "^1.17.2",
+    "mysql2": "^2.3.0",
+    "nodemailer": "^6.10.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.9"
