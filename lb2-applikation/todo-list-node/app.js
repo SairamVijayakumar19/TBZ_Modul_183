@@ -15,29 +15,30 @@ const search = require('./search');
 const searchProvider = require('./search/v2/index');
 const userAdminRoute = require('./admin/useradmin'); 
 const resetRoute = require('./reset');
+require('dotenv').config();
 
 const app = express();
 const PORT = 3000;
 
 // Persistent Session Store using MySQL
 const sessionStore = new MySQLStore({
-    host: 'm183-lb2-db',
-    port: 3306,
-    user: 'root',
-    password: 'Some.Real.Secr3t', // <-- Ändern!
-    database: 'm183_lb2'
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME
 });
 
 app.use(session({
-    secret: 'sectret', // <-- Ersetzen durch sicheren Key
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     store: sessionStore,
     cookie: {
         httpOnly: true,
-        secure: false, // HTTPS: true
+        secure: false,
         sameSite: 'strict',
-        maxAge: 1000 * 60 * 60 // 1 Stunde
+        maxAge: 1000 * 60 * 60
     }
 }));
 
