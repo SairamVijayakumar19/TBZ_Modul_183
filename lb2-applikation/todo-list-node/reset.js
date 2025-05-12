@@ -9,6 +9,16 @@ const footer = require('./fw/footer');
 
 const resetTokens = {};
 
+// Passwort-Richtlinienprüfung
+function isStrongPassword(password) {
+    const minLength = 8;
+    const hasUpper = /[A-Z]/.test(password);
+    const hasLower = /[a-z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    return password.length >= minLength && hasUpper && hasLower && hasNumber && hasSpecial;
+}
+
 router.get('/', async (req, res) => {
     const content = `
         <h2>Passwort zurücksetzen</h2>
@@ -85,13 +95,20 @@ router.post('/:token', async (req, res) => {
         return res.send(html);
     }
 
+    if (!isStrongPassword(password)) {
+        const html = await header(req) + `
+            <span class="info info-error">
+                Das Passwort muss mindestens 8 Zeichen lang sein und mindestens einen Großbuchstaben, Kleinbuchstaben, eine Zahl und ein Sonderzeichen enthalten.
+            </span>
+        ` + footer;
+        return res.send(html);
+    }
+
     const userId = resetTokens[token].userId;
     delete resetTokens[token];
 
     const conn = await db.connectDB();
-
     const hashedPassword = await bcrypt.hash(password, 10);
-
     await conn.query('UPDATE users SET password = ? WHERE ID = ?', [hashedPassword, userId]);
 
     const html = await header(req) + `<span class="info info-success">Passwort erfolgreich geändert.</span><p><a href="/login">Jetzt einloggen</a></p>` + footer;

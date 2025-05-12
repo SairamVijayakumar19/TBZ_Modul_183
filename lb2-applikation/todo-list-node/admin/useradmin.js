@@ -5,6 +5,23 @@ const header = require('../fw/header');
 const footer = require('../fw/footer');
 const bcrypt = require('bcrypt');
 
+function escapeHTML(str) {
+    if (!str) return '';
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+router.use((req, res, next) => {
+    if (!req.session.userid || req.session.role !== 'admin') {
+        return res.status(403).send('Permission denied!');
+    }
+    next();
+});
+
 router.get('/', async (req, res) => {
     const conn = await db.connectDB();
     if (!conn) return res.status(500).send("Database connection failed");
@@ -45,8 +62,8 @@ router.get('/', async (req, res) => {
 
             html += `
             <tr onclick="toggleTasks(${user.ID})" style="cursor:pointer;">
-                <td>${user.username}</td>
-                <td>${user.title}</td>
+                <td>${escapeHTML(user.username)}</td>
+                <td>${escapeHTML(user.title)}</td>
                 <td>
                     ${user.title !== 'Admin' ? `<a href="/admin/users/delete/${user.ID}" onclick="return confirm('Delete this user?')">Delete</a>` : ''}
                 </td>
@@ -56,7 +73,7 @@ router.get('/', async (req, res) => {
                     <strong>Assigned Tasks:</strong><br />
                     ${userTasks.length > 0 ? `
                         <ul>
-                            ${userTasks.map(task => `<li>${task.title} (${task.state})</li>`).join('')}
+                            ${userTasks.map(task => `<li>${escapeHTML(task.title)} (${escapeHTML(task.state)})</li>`).join('')}
                         </ul>` : `<em>No tasks assigned</em>`}
                 </td>
             </tr>`;
@@ -104,9 +121,9 @@ router.get('/tasks', async (req, res) => {
             html += `
             <tr>
                 <td>${task.ID}</td>
-                <td>${task.title}</td>
-                <td>${task.state}</td>
-                <td>${task.username}</td>
+                <td>${escapeHTML(task.title)}</td>
+                <td>${escapeHTML(task.state)}</td>
+                <td>${escapeHTML(task.username)}</td>
             </tr>`;
         });
 
@@ -121,7 +138,9 @@ router.get('/tasks', async (req, res) => {
 });
 
 router.get('/delete/:id', async (req, res) => {
-    const userId = req.params.id;
+    const userId = parseInt(req.params.id, 10);
+    if (isNaN(userId)) return res.status(400).send('Invalid user ID');
+
     const conn = await db.connectDB();
     if (!conn) return res.status(500).send("Database connection failed.");
 
@@ -165,14 +184,14 @@ router.get('/new', async (req, res) => {
         </div>
         <div class="form-group">
             <label for="password">Password:</label>
-            <input type="text" name="password" required />
+            <input type="password" name="password" required />
         </div>
         <div class="form-group">
             <label for="role">Role:</label>
             <select name="roleID">`;
 
     roles.forEach(role => {
-        html += `<option value="${role.ID}">${role.title}</option>`;
+        html += `<option value="${role.ID}">${escapeHTML(role.title)}</option>`;
     });
 
     html += `
@@ -187,6 +206,10 @@ router.get('/new', async (req, res) => {
 
 router.post('/new', async (req, res) => {
     const { username, password, roleID } = req.body;
+
+    if (!username || !password || !roleID) {
+        return res.status(400).send("Missing required fields");
+    }
 
     const conn = await db.connectDB();
     if (!conn) return res.status(500).send("DB connection failed");
@@ -206,7 +229,7 @@ router.post('/new', async (req, res) => {
 
         await conn.query(
             'INSERT INTO permissions (userID, roleID) VALUES (?, ?)',
-            [userID, roleID]
+            [userID, parseInt(roleID)]
         );
 
         await conn.commit();

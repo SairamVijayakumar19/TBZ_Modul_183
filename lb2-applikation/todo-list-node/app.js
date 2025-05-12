@@ -1,5 +1,6 @@
 const express = require('express');
 const session = require('express-session');
+const MySQLStore = require('express-mysql-session')(session);
 const cookieParser = require('cookie-parser');
 const path = require('path');
 const db = require('./fw/db');
@@ -18,30 +19,41 @@ const resetRoute = require('./reset');
 const app = express();
 const PORT = 3000;
 
-// Middleware für Session-Handling
+// Persistent Session Store using MySQL
+const sessionStore = new MySQLStore({
+    host: 'm183-lb2-db',
+    port: 3306,
+    user: 'root',
+    password: 'Some.Real.Secr3t', // <-- Ändern!
+    database: 'm183_lb2'
+});
+
 app.use(session({
-    secret: 'secret',
-    resave: true,
-    saveUninitialized: true,
+    secret: 'sectret', // <-- Ersetzen durch sicheren Key
+    resave: false,
+    saveUninitialized: false,
+    store: sessionStore,
     cookie: {
         httpOnly: true,
-        secure: false,
-        sameSite: 'strict', 
+        secure: false, // HTTPS: true
+        sameSite: 'strict',
         maxAge: 1000 * 60 * 60 // 1 Stunde
-      }
-    }));
+    }
+}));
 
-// Middleware für Body-Parser
+// Middleware für Body-Parser & Static Files
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(cookieParser());
+
+// Routen
 app.use('/admin/users', userAdminRoute);
 app.use('/reset', resetRoute);
 
 app.get('/', async (req, res) => {
     if (activeUserSession(req)) {
-        let html = await wrapContent(await index.html(req), req)
+        let html = await wrapContent(await index.html(req), req);
         res.send(html);
     } else {
         res.redirect('login');
@@ -50,15 +62,15 @@ app.get('/', async (req, res) => {
 
 app.post('/', async (req, res) => {
     if (activeUserSession(req)) {
-        let html = await wrapContent(await index.html(req), req)
+        let html = await wrapContent(await index.html(req), req);
         res.send(html);
     } else {
         res.redirect('login');
     }
-})
+});
 
 app.get('/admin/users', async (req, res) => {
-    if(activeUserSession(req)) {
+    if (activeUserSession(req)) {
         let html = await wrapContent(await adminUser.html, req);
         res.send(html);
     } else {
@@ -97,8 +109,8 @@ app.post('/login', async (req, res) => {
 
 app.get('/logout', (req, res) => {
     req.session.destroy();
-    res.cookie('username','');
-    res.cookie('userid','');
+    res.cookie('username', '');
+    res.cookie('userid', '');
     res.redirect('/login');
 });
 
@@ -133,13 +145,12 @@ app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
 
+// Helper
 async function wrapContent(content, req) {
     let headerHtml = await header(req);
-    return headerHtml+content+footer;
+    return headerHtml + content + footer;
 }
 
 function activeUserSession(req) {
-    console.log('in activeUserSession');
-    console.log(req.cookies);
     return req.session && req.session.userid;
 }

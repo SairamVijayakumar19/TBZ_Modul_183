@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt');
 
 async function handleLogin(req, res) {
     let msg = '';
-    let user = { username: '', userid: 0 };
+    let user = { username: '', userid: 0, role: '' };
 
     const { username, password } = req.body;
 
@@ -13,6 +13,7 @@ async function handleLogin(req, res) {
         if (result.valid) {
             user.username = username;
             user.userid = result.userId;
+            user.role = result.role;
             msg = result.msg;
         } else {
             msg = result.msg;
@@ -25,30 +26,45 @@ async function handleLogin(req, res) {
 }
 
 function startUserSession(req, res, user) {
-    req.session.userid = user.userid;
-    req.session.username = user.username;
-    res.redirect('/');
+    req.session.regenerate((err) => {
+        if (err) {
+            console.error('[ERROR] Session konnte nicht regeneriert werden:', err);
+            return res.status(500).send('<span class="info info-error">Fehler bei der Sitzungserstellung.</span>');
+        }
+
+        req.session.userid = user.userid;
+        req.session.username = user.username;
+        req.session.role = user.role; // Rolle sicher in Session speichern
+
+        res.redirect('/');
+    });
 }
 
 async function validateLogin(username, password) {
-    let result = { valid: false, msg: '', userId: 0 };
+    let result = { valid: false, msg: '', userId: 0, role: '' };
 
     try {
         const dbConnection = await db.connectDB();
 
         const [rows] = await dbConnection.execute(
-            "SELECT id, password FROM users WHERE username = ?",
+            `SELECT users.id, users.password, roles.title AS role
+             FROM users
+             INNER JOIN permissions ON users.id = permissions.userID
+             INNER JOIN roles ON permissions.roleID = roles.ID
+             WHERE users.username = ?`,
             [username]
         );
 
         if (rows.length > 0) {
             const db_id = rows[0].id;
             const db_password = rows[0].password;
+            const db_role = rows[0].role;
 
             const match = await bcrypt.compare(password, db_password);
 
             if (match) {
                 result.userId = db_id;
+                result.role = db_role;
                 result.valid = true;
                 result.msg = '<span class="info info-success">Login erfolgreich</span>';
             } else {

@@ -17,25 +17,45 @@ async function getHtml(req) {
     let html = '';
     let options = ["Open", "In Progress", "Done"];
 
+    // Eingabe validieren
     if (req.query.id !== undefined) {
-        taskId = req.query.id;
+        const rawId = req.query.id;
+        const parsedId = parseInt(rawId, 10);
 
-        const conn = await db.connectDB();
-        const [result] = await conn.execute('SELECT ID, title, state FROM tasks WHERE ID = ?', [taskId]);
+        if (!isNaN(parsedId)) {
+            taskId = parsedId;
 
-        if (result.length > 0) {
-            title = result[0].title;
-            state = result[0].state;
+            try {
+                const conn = await db.connectDB();
+                const [result] = await conn.execute(
+                    'SELECT ID, title, state FROM tasks WHERE ID = ?',
+                    [taskId]
+                );
+
+                if (result.length > 0) {
+                    title = result[0].title;
+                    state = result[0].state;
+                }
+
+                html += `<h1>Edit Task</h1>`;
+            } catch (err) {
+                console.error('[Fehler beim Abrufen der Aufgabe]:', err);
+                html += `<p class="info info-error">Fehler beim Laden der Aufgabe.</p>`;
+                html += `<a href="/">Zurück</a>`;
+                return html;
+            }
+        } else {
+            html += `<p class="info info-error">Ungültige Aufgaben-ID.</p>`;
+            html += `<a href="/">Zurück</a>`;
+            return html;
         }
-
-        html += `<h1>Edit Task</h1>`;
     } else {
         html += `<h1>Create Task</h1>`;
     }
 
     html += `
     <form id="form" method="post" action="savetask">
-        <input type="hidden" name="id" value="${escapeHTML(taskId)}" />
+        <input type="hidden" name="id" value="${escapeHTML(taskId.toString())}" />
         <div class="form-group">
             <label for="title">Description</label>
             <input type="text" class="form-control size-medium" name="title" id="title" value="${escapeHTML(title)}">
